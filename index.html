@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<head>
+
+<title>SAMCOBAL ERP</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5C3A21">
+<style>
+
+body{
+font-family:Arial;
+background:#5C3A21;
+margin:0;
+}
+
+
+.box{
+background:white;
+width:85%;
+margin:30px auto;
+padding:25px;
+border-radius:15px;
+overflow:hidden;
+}
+
+button{
+width:auto;
+min-width:180px;
+padding:12px 25px;
+margin:10px;
+background:#5C3A21;
+color:white;
+border:none;
+border-radius:12px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 4px 8px rgba(0,0,0,0.2);
+transition:0.3s;
+}
+
+button:hover{
+background:#8B5A2B;
+transform:translateY(-2px);
+}
+
+input, select{
+width:95%;
+padding:12px;
+margin:8px 0;
+}
+
+.card{
+background:#eee;
+padding:15px;
+margin:10px 0;
+border-radius:10px;
+}
+
+h1,h2{
+color:#5C3A21;
+}
+@media print {
+  button {
+    display: none;
+  }
+}
+.dashboard-cards{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+}
+
+.dashboard-card{
+background:white;
+padding:20px;
+border-radius:15px;
+box-shadow:0 4px 10px rgba(0,0,0,0.15);
+text-align:center;
+font-size:18px;
+font-weight:bold;
+}
+
+.dashboard-card span{
+display:block;
+font-size:25px;
+margin-top:10px;
+color:#5C3A21;
+}
+.menu{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+margin-top:25px;
+padding:20px;
+border:5px solid #D6A15D;
+border-radius:25px;
+background:#fff8ef;
+box-shadow:0 5px 15px rgba(0,0,0,0.25);
+}
+
+.menu button{
+background:#5C3A21 !important;
+color:white !important;
+height:75px !important;
+width:100% !important;
+min-width:0 !important;
+font-size:14px !important;
+font-weight:bold;
+border:3px solid #D6A15D !important;
+border-radius:15px !important;
+box-shadow:0 5px 12px rgba(0,0,0,0.3);
+margin:0 !important;
+padding:5px !important;
+}
+
+.menu button:hover{
+background:#8B5A2B !important;
+transform:scale(1.05);
+}
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="box">
+
+<h1>🍫 SAMCOBAL ERP</h1>
+
+<p>Cocoa Processing Management System</p>
+
+
+<input id="username" placeholder="Email">
+
+<input id="password" type="password" placeholder="Password">
+
+
+<button onclick="login()">LOGIN</button>
+
+
+</div>
+
+
+
+<script>
+// FIREBASE SETUP
+
+const firebaseConfig = {
+apiKey: "AIzaSyBFqBsyRVsPTCR6ZS-5TRgbUISMKz1HkU0",
+authDomain: "samcobal-erp.firebaseapp.com",
+projectId: "samcobal-erp",
+storageBucket: "samcobal-erp.firebasestorage.app",
+messagingSenderId: "136834561708",
+appId: "1:136834561708:web:0250b5b391b36b4173d109"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+const auth = firebase.auth();
+
+function login(){
+
+let email = document.getElementById("username").value.trim();
+let password = document.getElementById("password").value;
+
+auth.signInWithEmailAndPassword(email,password)
+.then((result)=>{
+dashboard();
+alert("Logged in as: " + result.user.email);
+
+db.collection("users").get()
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+console.log(doc.data());
+alert(JSON.stringify(doc.data()));
+});
+
+});
+
+})
+.catch(error=>{
+
+alert("Error Code: " + error.code);
+
+alert("Error Message: " + error.message);
+
+});
+
+}
+
+function logout(){
+
+auth.signOut()
+
+.then(()=>{
+
+alert("Logged out successfully");
+
+location.reload();
+
+})
+
+.catch(error=>{
+
+alert(error.message);
+
+});
+
+}
+
+function dashboard(){
+
+document.body.innerHTML =`
+
+<div class="box">
+
+<div style="text-align:center;">
+
+<img src="logo.png" width="150" alt="SAMCOBAL Logo">
+
+<h1>🍫 SAMCOBAL ERP</h1>
+
+<p><b>Agro-Processing and Global Ventures</b></p>
+
+<p><i>"Real Cocoa Real Energy Every Day"</i></p>
+
+<h3>Welcome Admin</h3>
+
+</div>
+
+<div class="card">
+💰 Total Sales: <span id="salesTotal">Loading...</span> FCFA
+</div>
+
+<div class="card">
+💸 Expenses: <span id="expenseTotal">Loading...</span> FCFA
+</div>
+
+<div class="card">
+📈 Profit: <span id="profitTotal">Loading...</span> FCFA
+</div>
+
+<div class="card">
+👥 Customers: <span id="customerTotal">Loading...</span>
+</div>
+
+<div class="card">
+📦 Products in Stock: <span id="productTotal">Loading...</span>
+</div>
+
+<div class="card">
+⚠️ Low Stock: <span id="lowStockTotal">Loading...</span>
+</div>
+<div class="card">
+📅 Today's Sales: <span id="todaySales">Loading...</span> FCFA
+</div>
+<div class="card">
+<h3>🛒 Recent Sales</h3>
+<div id="recentSales">Loading...</div>
+</div>
+<div class="card">
+📅 This Month Sales: <span id="monthSales">Loading...</span> FCFA
+</div>
+<div class="card">
+🏆 Best Selling Product: <span id="bestProduct">Loading...</span>
+</div>
+<div class="card">
+
+<h3>📊 Sales Performance</h3>
+
+<canvas id="salesChart"></canvas>
+
+</div> <!-- CLOSE SALES PERFORMANCE CARD -->
+
+<div class="menu">
+
+<button onclick="inventory()">📦<br>Inventory</button>
+
+<button onclick="products()">🍫<br>Products</button>
+
+<button onclick="sales()">🛒<br>Sales</button>
+
+<button onclick="production()">🏭<br>Production</button>
+
+<button onclick="expenses()">💰<br>Expenses</button>
+
+<button onclick="customers()">👥<br>Customers</button>
+
+<button onclick="reports()">📊<br>Reports</button>
+
+<button onclick="invoice()">🧾<br>Invoice</button>
+
+<button onclick="logout()">🚪<br>Logout</button>
+
+</div>
+
+</div>
+
+`;
+
+loadDashboardData();
+
+loadRecentSales();
+
+setTimeout(()=>{
+
+loadSalesChart();
+
+},1000);
+
+}
+
+function loadDashboardData(){
+
+let totalSales = 0;
+let totalExpenses = 0;
+
+
+db.collection("sales").get()
+
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+totalSales += Number(doc.data().amount);
+
+});
+
+
+document.getElementById("salesTotal").innerHTML = totalSales;
+let todaySales = 0;
+
+let today = new Date().toDateString();
+
+snapshot.forEach(doc=>{
+
+let sale = doc.data();
+
+if(sale.date){
+
+let saleDate = sale.date.toDate().toDateString();
+
+let today = new Date().toDateString();
+
+if(saleDate === today){
+
+todaySales += Number(sale.amount);
+
+}
+
+}
+
+});
+
+document.getElementById("todaySales").innerHTML = todaySales;
+let monthSales = 0;
+let productCount = {};
+
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+
+snapshot.forEach(doc=>{
+
+let sale = doc.data();
+
+if(sale.date){
+
+let d = sale.date.toDate();
+
+if(
+d.getMonth() === currentMonth &&
+d.getFullYear() === currentYear
+){
+
+monthSales += Number(sale.amount);
+
+}
+
+}
+
+
+if(sale.product){
+
+if(productCount[sale.product]){
+
+productCount[sale.product] += Number(sale.quantity);
+
+}else{
+
+productCount[sale.product] = Number(sale.quantity);
+
+}
+
+}
+
+});
+
+
+document.getElementById("monthSales").innerHTML = monthSales;
+
+
+let bestProduct = "";
+let highest = 0;
+
+
+for(let p in productCount){
+
+if(productCount[p] > highest){
+
+highest = productCount[p];
+
+bestProduct = p;
+
+}
+
+}
+
+
+document.getElementById("bestProduct").innerHTML = bestProduct;
+return db.collection("expenses").get();
+
+
+})
+
+.then(snapshot=>{
+
+
+snapshot.forEach(doc=>{
+
+totalExpenses += Number(doc.data().amount);
+
+});
+
+
+document.getElementById("expenseTotal").innerHTML = totalExpenses;
+
+
+document.getElementById("profitTotal").innerHTML =
+totalSales - totalExpenses;
+
+
+return db.collection("customers").get();
+
+
+})
+
+.then(snapshot=>{
+
+
+document.getElementById("customerTotal").innerHTML =
+snapshot.size;
+
+
+return db.collection("inventory").get();
+
+
+})
+
+.then(snapshot=>{
+
+let totalProducts = 0;
+
+snapshot.forEach(doc=>{
+
+totalProducts += Number(doc.data().quantity);
+
+});
+
+document.getElementById("productTotal").innerHTML = totalProducts;
+let lowStock = 0;
+
+snapshot.forEach(doc=>{
+
+if(Number(doc.data().quantity) <= 5){
+
+lowStock++;
+
+}
+
+});
+
+document.getElementById("lowStockTotal").innerHTML = lowStock;
+})
+
+
+
+.catch(error=>{
+
+console.log(error);
+
+});
+
+}
+// INVENTORY MODULE
+
+function inventory(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>📦 Inventory</h1>
+
+<input id="stockName" placeholder="Item name">
+
+<input id="stockQty" placeholder="Quantity">
+
+<input id="stockUnit" placeholder="Unit (kg, litres, units)">
+<select id="stockCategory">
+
+<option value="Raw Material">Raw Material</option>
+
+<option value="Finished Product">Finished Product</option>
+
+</select>
+
+<button onclick="addStock()">Add Stock</button>
+<button onclick="stockAdjustment()">⚖️ Stock Adjustment</button>
+
+<h2>Current Stock</h2>
+
+<div id="stockList"></div>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+showStock();
+
+}
+
+function stockAdjustment(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>⚖️ Stock Adjustment</h1>
+
+<input id="adjustItem" placeholder="Item name">
+
+<select id="adjustType">
+
+<option value="add">Add Stock</option>
+
+<option value="remove">Remove Stock</option>
+
+</select>
+
+
+<input id="adjustQty" placeholder="Quantity">
+
+
+<button onclick="saveAdjustment()">Save Adjustment</button>
+
+<button onclick="inventory()">⬅ Back</button>
+
+</div>
+
+`;
+
+}
+
+
+function saveAdjustment(){
+
+let item = adjustItem.value;
+let qty = Number(adjustQty.value);
+let type = adjustType.value;
+
+
+db.collection("inventory")
+.where("name","==",item)
+.get()
+
+.then(snapshot=>{
+
+
+if(!snapshot.empty){
+
+let doc = snapshot.docs[0];
+
+let current = doc.data().quantity;
+
+
+let newQty;
+
+
+if(type=="add"){
+
+newQty = current + qty;
+
+}else{
+
+newQty = current - qty;
+
+}
+
+
+doc.ref.update({
+
+quantity:newQty,
+
+date:new Date()
+
+});
+
+
+alert("Stock adjusted successfully!");
+
+inventory();
+
+
+}else{
+
+alert("Item not found!");
+
+}
+
+
+});
+
+}
+
+function addStock(){
+
+let item = stockName.value;
+let quantity = Number(stockQty.value);
+let unit = stockUnit.value;
+let category = stockCategory.value;
+
+
+db.collection("inventory")
+.where("name","==",item)
+.get()
+
+.then((snapshot)=>{
+
+
+if(!snapshot.empty){
+
+// Item already exists, update quantity
+
+let doc = snapshot.docs[0];
+
+let oldQty = doc.data().quantity;
+
+
+doc.ref.update({
+
+quantity: oldQty + quantity,
+
+date: new Date()
+
+});
+
+
+alert("Stock quantity updated!");
+
+showStock();
+
+
+}else{
+
+// New item
+
+db.collection("inventory").add({
+
+name:item,
+
+quantity:quantity,
+
+unit:unit,
+
+category:category,
+
+date:new Date()
+
+});
+
+
+alert("New stock added!");
+
+showStock();
+
+}
+
+
+})
+
+.catch(error=>{
+
+alert("Error: " + error.message);
+
+});
+
+
+}
+
+
+
+function showStock(){
+
+let output="";
+
+db.collection("inventory").get()
+
+.then((snapshot)=>{
+
+snapshot.forEach((doc)=>{
+
+let s = doc.data();
+
+output += `
+
+<div class="card">
+
+<b>${s.name}</b>
+
+<br>
+
+Category: ${s.category}
+
+<br>
+
+Quantity: ${s.quantity} ${s.unit}
+
+</div>
+
+`;
+
+});
+
+
+document.getElementById("stockList").innerHTML = output;
+
+
+})
+
+.catch(error=>{
+
+alert("Error loading stock: " + error.message);
+
+});
+
+}
+
+
+
+
+// PRODUCTS MODULE
+
+
+function products(){
+
+let productList=[
+
+["Santtea Choco Sugar Free","550g",3500],
+
+["Santtea Choco Plus Soyabean Milk","600g",3500],
+
+["Santtea Choco All Purpose","600g",3500],
+
+["Cocoa Powder","500g",5000],
+
+["Cocoa Nibs","600g",5000],
+
+["Santtea Choco Supreme","600g",5200],
+
+["Cocoa Butter","1 litre",9500]
+
+];
+
+productList.forEach(p=>{
+
+db.collection("inventory")
+.where("name","==",p[0])
+.get()
+
+.then(snapshot=>{
+
+if(snapshot.empty){
+
+db.collection("inventory").add({
+
+name:p[0],
+
+quantity:0,
+
+unit:p[1],
+
+price:p[2],
+
+category:"Finished Product",
+
+date:new Date()
+
+});
+
+}
+else{
+
+let doc = snapshot.docs[0];
+
+doc.ref.update({
+
+price:p[2],
+
+unit:p[1],
+
+category:"Finished Product"
+
+});
+
+
+}
+
+});
+
+});
+let output="";
+
+
+productList.forEach(p=>{
+
+output+=`
+
+<div class="card">
+
+<h3>${p[0]}</h3>
+
+Size: ${p[1]}
+
+<br>
+
+Price: ${p[2]} FCFA
+
+</div>
+
+`;
+
+});
+
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>🍫 Products</h1>
+
+${output}
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+}
+// SALES MODULE
+
+function sales(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>🛒 Sales</h1>
+
+
+<select id="saleProduct">
+
+
+</select>
+
+
+<input id="customerName" placeholder="Customer name">
+
+<input id="saleQty" placeholder="Quantity">
+
+
+<button onclick="saveSale()">Save Sale</button>
+
+
+<div id="saleList"></div>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+loadSaleProducts();
+showSales();
+
+}
+
+function loadSaleProducts(){
+
+let select = document.getElementById("saleProduct");
+
+select.innerHTML = "";
+
+db.collection("inventory")
+.where("category","==","Finished Product")
+.get()
+
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+let p = doc.data();
+console.log(p);
+let option = document.createElement("option");
+
+option.value = p.name;
+
+option.text =
+p.name +
+" - " +
+p.price +
+" FCFA (Stock: " +
+p.quantity +
+")";
+
+select.appendChild(option);
+
+});
+
+});
+
+}
+
+function saveSale(){
+
+let product = saleProduct.value;
+
+let qty = Number(saleQty.value);
+
+let amount = Number(saleProduct.options[saleProduct.selectedIndex].text.match(/\d+/)[0]) * qty;
+
+
+db.collection("inventory")
+.where("name","==",product)
+.get()
+
+.then(snapshot=>{
+
+
+if(!snapshot.empty){
+
+let doc = snapshot.docs[0];
+
+let currentStock = doc.data().quantity;
+
+
+// Check stock
+
+if(currentStock < qty){
+
+alert("Insufficient stock available!");
+
+return;
+
+}
+
+
+// Reduce stock
+
+doc.ref.update({
+
+quantity: currentStock - qty,
+
+date:new Date()
+
+});
+
+
+// Save sale
+
+return db.collection("sales").add({
+
+customer: customerName.value,
+
+product: product,
+
+quantity: qty,
+
+amount: amount,
+
+date:new Date()
+
+});
+
+
+}else{
+
+alert("Product not found in inventory!");
+
+}
+
+
+})
+
+.then(()=>{
+
+alert("Sale saved successfully!");
+
+showSales();
+
+})
+
+.catch(error=>{
+
+alert("Error: " + error.message);
+
+});
+
+
+}
+
+function showSales(){
+
+let sales=JSON.parse(localStorage.getItem("sales")) || [];
+
+let output="";
+
+
+sales.forEach(s=>{
+
+output+=`
+
+<div class="card">
+
+Customer: ${s.customer}
+
+<br>
+
+Amount: ${s.amount} FCFA
+
+</div>
+
+`;
+
+});
+
+
+if(document.getElementById("saleList"))
+
+document.getElementById("saleList").innerHTML=output;
+
+}
+
+
+
+
+
+// PRODUCTION MODULE
+
+function production(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>🏭 Production</h1>
+
+<input id="batch" placeholder="Batch number">
+
+<input id="rawMaterial" placeholder="Raw material used">
+
+<input id="materialQty" placeholder="Quantity used">
+
+<input id="finishedProduct" placeholder="Finished product produced">
+
+<input id="productQty" placeholder="Quantity produced">
+
+
+<button onclick="saveProduction()">Save</button>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+}
+
+
+
+function saveProduction(){
+
+let raw = rawMaterial.value;
+let usedQty = Number(materialQty.value);
+
+let product = finishedProduct.value;
+let producedQty = Number(productQty.value);
+
+
+// Reduce raw material
+
+db.collection("inventory")
+.where("name","==",raw)
+.get()
+
+.then(snapshot=>{
+
+if(!snapshot.empty){
+
+let doc = snapshot.docs[0];
+
+let current = doc.data().quantity;
+
+
+doc.ref.update({
+
+quantity: current - usedQty,
+
+date:new Date()
+
+});
+
+}
+
+
+// Add finished product
+
+return db.collection("inventory")
+.where("name","==",product)
+.get();
+
+
+})
+
+.then(snapshot=>{
+
+
+if(!snapshot.empty){
+
+let doc = snapshot.docs[0];
+
+let current = doc.data().quantity;
+
+
+doc.ref.update({
+
+quantity: current + producedQty,
+
+date:new Date()
+
+});
+
+
+}else{
+
+db.collection("inventory").add({
+
+name: p[0],
+
+quantity: 0,
+
+unit: p[1],
+
+price: p[2],
+
+category: "Finished Product",
+
+date: new Date()
+
+});
+
+
+}
+
+
+// Save production record
+
+return db.collection("production").add({
+
+batch:batch.value,
+
+rawMaterial:raw,
+
+materialQty:usedQty,
+
+finishedProduct:product,
+
+productQty:producedQty,
+
+date:new Date()
+
+});
+
+
+})
+
+.then(()=>{
+
+alert("Production saved and inventory updated!");
+
+})
+
+
+.catch(error=>{
+
+alert(error.message);
+
+});
+
+
+}
+
+
+
+
+// EXPENSE MODULE
+
+function expenses(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>💰 Expenses</h1>
+
+<input id="expenseName" placeholder="Expense">
+
+<input id="expenseAmount" placeholder="Amount FCFA">
+
+
+<button onclick="saveExpense()">Save</button>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+}
+
+
+
+function saveExpense(){
+
+db.collection("expenses").add({
+
+name: expenseName.value,
+
+amount: Number(expenseAmount.value),
+
+date: new Date()
+
+})
+
+.then(()=>{
+
+alert("Expense saved online!");
+
+})
+
+.catch(error=>{
+
+alert("Error: " + error.message);
+
+});
+
+}
+
+
+
+
+
+// CUSTOMER MODULE
+
+function customers(){
+
+document.body.innerHTML=`
+
+<div class="box">
+
+<h1>👥 Customers</h1>
+
+<input id="custName" placeholder="Name">
+
+<input id="custPhone" placeholder="Phone">
+
+
+<button onclick="saveCustomer()">Save</button>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+}
+
+
+
+function saveCustomer(){
+
+db.collection("customers").add({
+
+name: custName.value,
+
+phone: custPhone.value,
+
+date: new Date()
+
+})
+
+.then(()=>{
+
+alert("Customer saved online!");
+
+})
+
+.catch(error=>{
+
+alert("Error: " + error.message);
+
+});
+
+}
+
+
+
+
+
+// REPORTS MODULE
+
+function reports(){
+
+let totalSales = 0;
+
+let totalExpenses = 0;
+
+
+db.collection("sales").get()
+
+.then((salesSnapshot)=>{
+
+
+salesSnapshot.forEach((doc)=>{
+
+let data = doc.data();
+
+totalSales += Number(data.amount);
+
+});
+
+
+
+return db.collection("expenses").get();
+
+
+})
+
+.then((expenseSnapshot)=>{
+
+
+expenseSnapshot.forEach((doc)=>{
+
+let data = doc.data();
+
+totalExpenses += Number(data.amount);
+
+});
+
+
+
+let profit = totalSales - totalExpenses;
+
+
+
+document.body.innerHTML = `
+
+<div class="box">
+
+<h1>📊 Business Reports</h1>
+
+
+<div class="card">
+
+Total Sales:
+
+<br>
+
+${totalSales} FCFA
+
+</div>
+
+
+<div class="card">
+
+Total Expenses:
+
+<br>
+
+${totalExpenses} FCFA
+
+</div>
+
+
+<div class="card">
+
+Net Profit:
+
+<br>
+
+${profit} FCFA
+
+</div>
+
+
+<button onclick="dashboard()">⬅ Back</button>
+
+
+</div>
+
+`;
+
+
+
+})
+
+
+.catch(error=>{
+
+alert("Report Error: " + error.message);
+
+});
+
+
+}
+
+function invoice(){
+
+document.body.innerHTML = `
+
+<div class="box">
+
+<h1>🧾 SAMCOBAL Invoice</h1>
+
+<p>Invoice No: SAM-INV-${Date.now()}</p>
+
+<p>Date: ${new Date().toLocaleString()}</p>
+
+<hr>
+
+<label>Customer Name</label>
+<input id="invCustomer" placeholder="Customer name">
+
+<label>Customer Phone</label>
+<input id="invPhone" placeholder="Phone number">
+
+<label>Select Product</label>
+<select id="invProduct" onchange="calculateInvoice()">
+</select>
+
+<label>Quantity</label>
+<input id="invQty" type="number" value="1" oninput="calculateInvoice()">
+
+<p>
+Price: <span id="invPrice">0</span> FCFA
+</p>
+
+<p>
+Total: <span id="invTotal">0</span> FCFA
+</p>
+
+<label>Payment Status</label>
+
+<select id="paymentStatus">
+
+<option>Paid</option>
+
+<option>Pending</option>
+
+</select>
+
+
+<button onclick="printInvoice()">Generate Invoice</button>
+
+<button onclick="dashboard()">⬅ Back</button>
+
+</div>
+
+`;
+
+loadInvoiceProducts();
+
+}
+function loadInvoiceProducts(){
+
+let select = document.getElementById("invProduct");
+
+db.collection("inventory")
+.where("category","==","Finished Product")
+.get()
+
+.then(snapshot=>{
+
+snapshot.forEach(doc=>{
+
+let p = doc.data();
+
+let option = document.createElement("option");
+
+option.value = p.name;
+
+option.text = p.name + " - " + p.price + " FCFA";
+
+option.setAttribute("data-price", p.price);
+
+select.appendChild(option);
+
+});
+
+calculateInvoice();
+
+})
+.catch(error=>{
+
+alert(error.message);
+
+});
+
+}
+
+
+function printInvoice(){
+
+let invoiceNo = "INV-" + Date.now();
+
+let customer = document.getElementById("invCustomer").value;
+let product = document.getElementById("invProduct").value;
+let qty = document.getElementById("invQty").value;
+let amount = document.getElementById("invTotal").innerHTML;
+
+db.collection("invoices").add({
+
+invoiceNo: invoiceNo,
+
+customer: customer,
+
+phone: document.getElementById("invPhone").value,
+
+product: product,
+
+quantity: qty,
+
+amount: amount,
+
+paymentStatus: document.getElementById("paymentStatus").value,
+
+date: new Date()
+
+});
+
+
+document.body.innerHTML = `
+
+<div style="padding:30px;font-family:Arial;max-width:500px;margin:auto;border:2px solid #333">
+
+<h1 style="text-align:center;">SAMCOBAL</h1>
+<div style="text-align:center;">
+    <img src="logo.png" width="300" alt="SAMCOBAL Logo">
+</div>
+<h3 style="text-align:center;">
+AGRO-PROCESSING AND GLOBAL VENTURE ENTERPRISE
+</h3>
+
+<p style="text-align:center;">
+Small Soppo Wonganga, Buea<br>
+📞 +237 672 091 814
+</p>
+
+<p style="text-align:center;font-style:italic;">
+"Real Cocoa Real Energy Every Day"
+</p>
+
+<hr>
+
+<h2 style="text-align:center;">SALES INVOICE</h2>
+
+<p><b>Invoice No:</b> ${invoiceNo}</p>
+
+<p><b>Date:</b> ${new Date().toLocaleDateString()}</p>
+
+<hr>
+
+<p><b>Customer:</b> ${customer}</p>
+
+<p><b>Product:</b> ${product}</p>
+
+<p><b>Quantity:</b> ${qty}</p>
+
+<p><b>Total Amount:</b> ${amount} FCFA</p>
+
+<hr>
+
+<h3 style="text-align:center;">
+Thank you for supporting SAMCOBAL
+</h3>
+
+</div>
+<button onclick="window.print()">Download / Print Invoice</button>
+`;
+
+}
+function loadRecentSales(){
+
+db.collection("sales")
+.orderBy("date","desc")
+.limit(5)
+.get()
+
+.then(snapshot=>{
+
+let output="";
+
+snapshot.forEach(doc=>{
+
+let s = doc.data();
+
+output += `
+
+<div class="card">
+
+Customer: ${s.customer}
+
+<br>
+
+Product: ${s.product}
+
+<br>
+
+Quantity: ${s.quantity}
+
+<br>
+
+Amount: ${s.amount} FCFA
+
+</div>
+
+`;
+
+});
+
+
+document.getElementById("recentSales").innerHTML = output;
+
+})
+
+.catch(error=>{
+
+console.log(error);
+
+});
+
+}
+function loadSalesChart(){
+
+db.collection("sales").get()
+
+.then(snapshot=>{
+
+let salesData = {};
+
+snapshot.forEach(doc=>{
+
+let sale = doc.data();
+
+let date = sale.date.toDate().toLocaleDateString();
+
+if(salesData[date]){
+
+salesData[date] += Number(sale.amount);
+
+}else{
+
+salesData[date] = Number(sale.amount);
+
+}
+
+});
+
+
+new Chart(document.getElementById("salesChart"),{
+
+type:"bar",
+
+data:{
+
+labels:Object.keys(salesData),
+
+datasets:[{
+
+label:"Sales FCFA",
+
+data:Object.values(salesData)
+
+}]
+
+}
+
+});
+
+});
+}
+
+function calculateInvoice(){
+
+let select = document.getElementById("invProduct");
+
+if(!select || select.selectedIndex < 0){
+return;
+}
+
+let price = Number(
+select.options[select.selectedIndex].getAttribute("data-price")
+);
+
+let qty = Number(document.getElementById("invQty").value) || 0;
+
+document.getElementById("invPrice").innerHTML = price;
+
+document.getElementById("invTotal").innerHTML = price * qty;
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker Registered"))
+    .catch(err => console.log(err));
+}
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker Registered"))
+    .catch(err => console.log(err));
+}
+
+
+</script>
+
+</body>
+</html>
