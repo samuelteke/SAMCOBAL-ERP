@@ -173,67 +173,55 @@ let email = document.getElementById("username").value.trim();
 let password = document.getElementById("password").value;
 
 auth.signInWithEmailAndPassword(email,password)
+
 .then((result)=>{
 
 let uid = result.user.uid;
 
 db.collection("users").doc(uid).get()
+
 .then((doc)=>{
 
 if(doc.exists){
 
 let role = doc.data().role;
 
-alert("Logged in as: " + role);
+if(role === "sales"){
 
-if(role === "admin"){
-    dashboard();
-}
+salesDashboard();
 
-else if(role === "sales"){
-    salesDashboard();
 }
 
 else if(role === "production"){
-    production();
+
+production();
 
 }
 
 else if(role === "accountant"){
-    reports();
+
+reports();
+
 }
 
 else{
-    alert("No role assigned");
+
+dashboard();
+
 }
 
-}else{
+}
 
-alert("User profile not found in Firestore");
+else{
+
+dashboard();
 
 }
 
 });
 
 })
-.catch(error=>{
 
-alert("Error Code: " + error.code);
-
-});
-alert("Logged in as: " + result.user.email);
-
-db.collection("users").get()
-.then(snapshot=>{
-
-snapshot.forEach(doc=>{
-console.log(doc.data());
-alert(JSON.stringify(doc.data()));
-});
-
-});
-
-})
 .catch(error=>{
 
 alert("Error Code: " + error.code);
