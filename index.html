@@ -186,12 +186,25 @@ if(doc.exists){
 
 let role = doc.data().role;
 
+alert("UID: " + uid + "\nRole: " + role);
+
 if(role === "sales"){
 
 alert("SALES ROLE FOUND");
 salesDashboard();
 
-}else{
+}
+else if(role === "production"){
+
+production();
+
+}
+else if(role === "accountant"){
+
+reports();
+
+}
+else{
 
 alert("ADMIN PATH. Role is: " + role);
 dashboard();
