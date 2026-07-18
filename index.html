@@ -187,9 +187,9 @@ if(doc.exists){
 let role = doc.data().role;
 
 if(role === "sales"){
-
-salesDashboard();
-
+    alert("Role = " + role);
+    salesDashboard();
+    return;
 }
 
 else if(role === "production"){
